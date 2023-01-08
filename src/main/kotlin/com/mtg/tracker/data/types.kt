@@ -11,6 +11,7 @@ data class Deck(val name: String, val tier: Tier)
 data class GameResult(
     val id: Int,
     val seasonId: Int,
+    val playerName: String,
     val deckName: String,
     val place: Int,
     val startOrder: Int,
