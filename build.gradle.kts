@@ -12,6 +12,7 @@ version = "0.0.1"
 java.sourceCompatibility = JavaVersion.VERSION_17
 
 val exposedVersion = "0.41.1"
+val arrowVersion = "1.1.2"
 
 repositories {
 	mavenCentral()
@@ -26,6 +27,8 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+	/* Arrow */
+	implementation("io.arrow-kt:arrow-core-jvm:$arrowVersion")
 	/* Database stuff */
 	implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
 	implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
