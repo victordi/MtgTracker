@@ -7,10 +7,8 @@ import com.mtg.tracker.failure.DatabaseFailure
 import com.mtg.tracker.failure.Failure
 import com.mtg.tracker.failure.NameNotUniqueFailure
 import com.mtg.tracker.failure.PlayerNotFound
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.slf4j.LoggerFactory
 
 object PlayerQuery {
@@ -32,11 +30,12 @@ object PlayerQuery {
     }
 
     suspend fun findByName(name: String): Either<Failure, Player> = safeTransaction {
-        val decks = Decks
+        val playerExists = Players.selectAll().map { it[Players.name] }.contains(name)
+        if (!playerExists) null
+        else Decks
             .select { Op.build { Decks.playerName eq name } }
             .map { Deck(it[Decks.name], it[Decks.tier]) }
-        if (decks.isEmpty()) null
-        else Player(name, decks)
+            .let { Player(name, it) }
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
@@ -50,4 +49,14 @@ object PlayerQuery {
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
+
+    suspend fun delete(name: String): Either<Failure, Unit> = safeTransaction {
+        val deckCount = Decks.deleteWhere { playerName eq name }
+        val playerCount = Players.deleteWhere { Players.name eq name }
+        if (deckCount + playerCount == 0) null
+        else Unit
+    }
+        .tapLeft { logger.error(it.message) }
+        .mapLeft { DatabaseFailure }
+        .leftIfNull { PlayerNotFound }
 }

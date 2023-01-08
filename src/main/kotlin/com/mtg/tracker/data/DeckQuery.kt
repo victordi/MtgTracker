@@ -4,11 +4,11 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.leftIfNull
 import com.mtg.tracker.failure.DatabaseFailure
+import com.mtg.tracker.failure.DeckNotFound
 import com.mtg.tracker.failure.Failure
 import com.mtg.tracker.failure.NameNotUniqueFailure
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.slf4j.LoggerFactory
 
 object DeckQuery {
@@ -47,4 +47,22 @@ object DeckQuery {
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
+
+    suspend fun updateTier(name: String, tier: Tier): Either<Failure, Tier> = safeTransaction {
+        val count = Decks.update({ Decks.name eq name }) {
+            it[Decks.tier] = tier
+        }
+        if (count == 1) tier else null
+    }
+        .tapLeft { logger.error(it.message) }
+        .mapLeft { DatabaseFailure }
+        .leftIfNull { DeckNotFound }
+
+    suspend fun delete(name: String): Either<Failure, Unit> = safeTransaction {
+        val count = Decks.deleteWhere { Decks.name eq name }
+        if (count == 1) Unit else null
+    }
+        .tapLeft { logger.error(it.message) }
+        .mapLeft { DatabaseFailure }
+        .leftIfNull { DeckNotFound }
 }
