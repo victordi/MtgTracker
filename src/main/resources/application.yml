@@ -1,1 +1,7 @@
 spring.liquibase.enabled: true
+mtg:
+  db:
+    url: "jdbc:pgsql://localhost:5432/postgres"
+    user: "postgres"
+    password: "password"
+    changeLog: "classpath:db.changelog-master.yml"
