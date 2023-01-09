@@ -1,8 +1,12 @@
-package com.mtg.tracker.data
+package com.mtg.tracker.data.query
 
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.leftIfNull
+import com.mtg.tracker.data.Deck
+import com.mtg.tracker.data.Decks
+import com.mtg.tracker.data.Tier
+import com.mtg.tracker.data.safeTransaction
 import com.mtg.tracker.failure.DatabaseFailure
 import com.mtg.tracker.failure.DeckNotFound
 import com.mtg.tracker.failure.Failure
@@ -19,7 +23,7 @@ object DeckQuery {
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
-        .leftIfNull { NameNotUniqueFailure }
+        .leftIfNull { NameNotUniqueFailure.also { logger.error(it.message) } }
 
     suspend fun insert(deck: Deck, player: String): Either<Failure, Deck> = failIfExists(deck.name).flatMap {
         safeTransaction {
@@ -56,7 +60,7 @@ object DeckQuery {
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
-        .leftIfNull { DeckNotFound }
+        .leftIfNull { DeckNotFound.also { logger.error(it.message) } }
 
     suspend fun delete(name: String): Either<Failure, Unit> = safeTransaction {
         val count = Decks.deleteWhere { Decks.name eq name }
@@ -64,5 +68,5 @@ object DeckQuery {
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
-        .leftIfNull { DeckNotFound }
+        .leftIfNull { DeckNotFound.also { logger.error(it.message) } }
 }

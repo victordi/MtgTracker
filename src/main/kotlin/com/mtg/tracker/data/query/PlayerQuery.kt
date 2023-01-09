@@ -1,8 +1,13 @@
-package com.mtg.tracker.data
+package com.mtg.tracker.data.query
 
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.leftIfNull
+import com.mtg.tracker.data.Deck
+import com.mtg.tracker.data.Decks
+import com.mtg.tracker.data.Player
+import com.mtg.tracker.data.Players
+import com.mtg.tracker.data.safeTransaction
 import com.mtg.tracker.failure.DatabaseFailure
 import com.mtg.tracker.failure.Failure
 import com.mtg.tracker.failure.NameNotUniqueFailure
@@ -19,7 +24,7 @@ object PlayerQuery {
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
-        .leftIfNull { NameNotUniqueFailure }
+        .leftIfNull { NameNotUniqueFailure.also { logger.error(it.message) } }
 
     suspend fun insert(name: String): Either<Failure, String> = failIfExists(name).flatMap {
         safeTransaction {
@@ -39,13 +44,16 @@ object PlayerQuery {
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
-        .leftIfNull { PlayerNotFound }
+        .leftIfNull { PlayerNotFound.also { logger.error(it.message) } }
 
     suspend fun findAll(): Either<Failure, List<Player>> = safeTransaction {
-        Players.innerJoin(Decks)
+        Players.leftJoin(Decks)
             .selectAll()
             .groupBy { it[Players.name] }
-            .map { (name, decks) -> Player(name, decks.map { Deck(it[Decks.name], it[Decks.tier]) }) }
+            .map { (name, decks) -> Player(
+                    name, decks.filter { it.getOrNull(Decks.name) != null }.map { Deck(it[Decks.name], it[Decks.tier]) }
+                )
+            }
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
@@ -58,5 +66,5 @@ object PlayerQuery {
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
-        .leftIfNull { PlayerNotFound }
+        .leftIfNull { PlayerNotFound.also { logger.error(it.message) } }
 }

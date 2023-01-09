@@ -36,10 +36,23 @@ object GameResults : IntIdTable("GAME_RESULT") {
     val playerName = varchar("PLAYER_NAME", MAX_STRING_LENGTH).references(Players.name)
     val deckName = varchar("DECK_NAME", MAX_STRING_LENGTH).references(Decks.name)
     val place = integer("PLACE")
-    val order = integer("START_ORDER")
+    val startOrder = integer("START_ORDER")
     val kills = integer("KILLS")
     val commanderKills = integer("COMMANDER_KILLS")
     val infinite = bool("INFINITE")
     val bodyGuard = integer("BODY_GUARD")
     val penalty = integer("PENALTY")
+    val points = integer("POINTS")
+}
+
+object PointsSystems : IntIdTable("POINTS_SYSTEM") {
+    val seasonId = integer("SEASON_ID").references(Seasons.id)
+    val firstPlace = integer("FIRST_PLACE")
+    val secondPlace = integer("SECOND_PLACE")
+    val thirdPlace = integer("THIRD_PLACE")
+    val fourthPlace = integer("FOURTH_PLACE")
+    val kill = integer("KILL")
+    val commanderKill = integer("COMMANDER_KILL")
+    val infinite = integer("INFINITE")
+    val bodyGuard = integer("BODY_GUARD")
 }
