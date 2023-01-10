@@ -37,7 +37,8 @@ data class PointSystem(
 val DEFAULT_POINT_SYSTEM = PointSystem(listOf(4, 2, 1, 0), 2, 1, 2, 1)
 
 data class NewSeasonRequest(
-    val player1: String, val player2: String, val player3: String, val player4: String, val pointSystem: PointSystem
+    val player1: String, val player2: String, val player3: String, val player4: String,
+    val pointSystem: PointSystem = DEFAULT_POINT_SYSTEM
 )
 
 data class Stats(

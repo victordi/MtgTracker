@@ -71,6 +71,7 @@ object SeasonQuery {
                 )
                 Season(it[Seasons.id].value, players)
             }
+            .sortedBy { it.id }
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
