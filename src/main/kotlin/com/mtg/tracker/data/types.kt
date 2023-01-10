@@ -39,3 +39,42 @@ val DEFAULT_POINT_SYSTEM = PointSystem(listOf(4, 2, 1, 0), 2, 1, 2, 1)
 data class NewSeasonRequest(
     val player1: String, val player2: String, val player3: String, val player4: String, val pointSystem: PointSystem
 )
+
+data class Stats(
+    val gamesPlayed: Int,
+    val gamesWon: Int,
+    val gamesWonWhenFirst: Int,
+    val gamesWonWhenSecond: Int,
+    val gamesWonWhenThird: Int,
+    val gamesWonWhenFourth: Int,
+    val gamesWonWithInfinite: Int,
+    val avgPlace: Double,
+    val avgKills: Double,
+    val avgCommanderKills: Double
+)
+
+data class DeckStats(
+    val deckName: String,
+    val stats: Stats
+)
+
+data class PlayerStats(
+    val playerName: String,
+    val avgDeckStats: List<DeckStats>,
+    val avgStats: Stats,
+    val deckStatsPerSeason: Map<Int, List<DeckStats>>,
+    val statsPerSeason: Map<Int, Stats>
+)
+
+fun List<Stats>.calculateAverage(): Stats = Stats(
+    sumOf { it.gamesPlayed },
+    sumOf { it.gamesWon },
+    sumOf { it.gamesWonWhenFirst },
+    sumOf { it.gamesWonWhenSecond },
+    sumOf { it.gamesWonWhenThird },
+    sumOf { it.gamesWonWhenFourth },
+    sumOf { it.gamesWonWithInfinite },
+    sumOf { it.avgPlace } / size,
+    sumOf { it.avgKills } / size,
+    sumOf { it.avgCommanderKills } / size
+)
