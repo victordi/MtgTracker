@@ -23,9 +23,9 @@ class PlayerController {
     }
 
     @GetMapping("/{name}")
-    suspend fun getByName(@PathVariable("name") body: PlayerReq) = run {
-        logger.info("Get player by name: ${body.name}")
-        PlayerQuery.findByName(body.name).toHttpResponse()
+    suspend fun getByName(@PathVariable("name") name: String) = run {
+        logger.info("Get player by name: $name")
+        PlayerQuery.findByName(name).toHttpResponse()
     }
 
     @PostMapping
@@ -41,8 +41,8 @@ class PlayerController {
     }
 
     @GetMapping("/{name}/stats")
-    suspend fun getStats(@PathVariable("name") body: PlayerReq) = run {
-        logger.info("Get stats of player: ${body.name}")
-        PlayerQuery.stats(body.name).toHttpResponse()
+    suspend fun getStats(@PathVariable("name") name: String) = run {
+        logger.info("Get stats of player: $name")
+        PlayerQuery.stats(name).toHttpResponse()
     }
 }
