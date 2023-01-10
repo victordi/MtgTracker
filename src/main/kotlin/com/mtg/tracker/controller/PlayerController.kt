@@ -29,13 +29,13 @@ class PlayerController {
     }
 
     @PostMapping
-    suspend fun addPlayer(@RequestBody body: PlayerReq) = run {
+    suspend fun addPlayer(@RequestBody body: NameReq) = run {
         logger.info("Insert new player: ${body.name}")
         PlayerQuery.insert(body.name).toHttpResponse()
     }
 
     @DeleteMapping
-    suspend fun removePlayer(@RequestBody body: PlayerReq) = run {
+    suspend fun removePlayer(@RequestBody body: NameReq) = run {
         logger.info("Delete player: ${body.name}")
         PlayerQuery.delete(body.name).toHttpResponse()
     }

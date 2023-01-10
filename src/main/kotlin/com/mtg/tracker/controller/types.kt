@@ -1,3 +1,3 @@
 package com.mtg.tracker.controller
 
-data class PlayerReq(val name: String)
+data class NameReq(val name: String)

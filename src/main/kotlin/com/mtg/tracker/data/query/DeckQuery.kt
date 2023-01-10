@@ -52,19 +52,27 @@ object DeckQuery {
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
 
-    suspend fun updateTier(name: String, tier: Tier): Either<Failure, Tier> = safeTransaction {
-        val count = Decks.update({ Decks.name eq name }) {
-            it[Decks.tier] = tier
+    suspend fun updateTier(player: String, deck: Deck): Either<Failure, Tier> = safeTransaction {
+        val owner = Decks.select { Decks.name eq deck.name }.map { it[Decks.playerName] }.firstOrNull()
+        if (owner != player) null
+        else {
+            val count = Decks.update({ Decks.name eq deck.name }) {
+                it[tier] = deck.tier
+            }
+            if (count == 1) deck.tier else null
         }
-        if (count == 1) tier else null
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
         .leftIfNull { DeckNotFound.also { logger.error(it.message) } }
 
-    suspend fun delete(name: String): Either<Failure, Unit> = safeTransaction {
-        val count = Decks.deleteWhere { Decks.name eq name }
-        if (count == 1) Unit else null
+    suspend fun delete(player: String, name: String): Either<Failure, Unit> = safeTransaction {
+        val owner = Decks.select { Decks.name eq name }.map { it[Decks.playerName] }.firstOrNull()
+        if (owner != player) null
+        else {
+            val count = Decks.deleteWhere { Decks.name eq name }
+            if (count == 1) Unit else null
+        }
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
