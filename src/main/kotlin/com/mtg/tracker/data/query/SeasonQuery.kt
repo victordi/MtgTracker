@@ -7,7 +7,9 @@ import arrow.core.flatMap
 import arrow.core.leftIfNull
 import com.mtg.tracker.data.NewSeasonRequest
 import com.mtg.tracker.data.Season
+import com.mtg.tracker.data.SeasonStats
 import com.mtg.tracker.data.Seasons
+import com.mtg.tracker.data.calculateAverage
 import com.mtg.tracker.data.safeTransaction
 import com.mtg.tracker.failure.DatabaseFailure
 import com.mtg.tracker.failure.Failure
@@ -90,4 +92,13 @@ object SeasonQuery {
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
+
+    suspend fun stats(seasonId: Int): Either<Failure, Map<String, SeasonStats>> = either {
+        val season = find(seasonId).bind()
+        season.players.map { it.first }.associateWith {
+            val deckStats = gameResultsPerSeason(seasonId, it).bind()
+            val playerStats = deckStats.map { deck -> deck.stats }.calculateAverage()
+            SeasonStats(playerStats, deckStats)
+        }
+    }
 }

@@ -33,4 +33,10 @@ class SeasonController {
         logger.info("Starting a new season: $seasonRequest")
         SeasonQuery.startSeason(seasonRequest).toHttpResponse()
     }
+
+    @GetMapping("/{id}/stats")
+    suspend fun getStats(@PathVariable("id") id: Int) = run {
+        logger.info("Retrieve stats of Season($id)")
+        SeasonQuery.stats(id).toHttpResponse()
+    }
 }

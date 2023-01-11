@@ -67,6 +67,11 @@ data class PlayerStats(
     val statsPerSeason: Map<Int, Stats>
 )
 
+data class SeasonStats(
+    val avgStats: Stats,
+    val deckStats: List<DeckStats>
+)
+
 fun List<Stats>.calculateAverage(): Stats = Stats(
     sumOf { it.gamesPlayed },
     sumOf { it.gamesWon },
