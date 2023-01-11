@@ -17,7 +17,7 @@ object Decks : Table("DECK") {
     val playerName = varchar("PLAYER_NAME", MAX_STRING_LENGTH)
         .references(Players.name)
 
-    override val primaryKey = PrimaryKey(Players.name)
+    override val primaryKey = PrimaryKey(name)
 }
 
 object Seasons: IntIdTable("SEASON") {
@@ -55,4 +55,11 @@ object PointsSystems : IntIdTable("POINTS_SYSTEM") {
     val commanderKill = integer("COMMANDER_KILL")
     val infinite = integer("INFINITE")
     val bodyGuard = integer("BODY_GUARD")
+}
+
+object Users : Table("MTG_USER") {
+    val username = varchar("USERNAME", MAX_STRING_LENGTH)
+    val password = varchar("PASSWORD", MAX_STRING_LENGTH)
+
+    override val primaryKey = PrimaryKey(username)
 }

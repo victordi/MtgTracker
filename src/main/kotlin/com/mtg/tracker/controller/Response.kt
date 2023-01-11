@@ -1,9 +1,12 @@
 package com.mtg.tracker.controller
 
 import arrow.core.Either
+import arrow.core.Validated
 import com.mtg.tracker.failure.DatabaseFailure
 import com.mtg.tracker.failure.DeckNotFound
 import com.mtg.tracker.failure.Failure
+import com.mtg.tracker.failure.InvalidLoginCredentials
+import com.mtg.tracker.failure.JwtSerializationException
 import com.mtg.tracker.failure.NameNotUniqueFailure
 import com.mtg.tracker.failure.PlayerNotFound
 import com.mtg.tracker.failure.PlayerNotInSeason
@@ -39,6 +42,8 @@ fun Failure.toError(): Error = run {
         is DeckNotFound -> NOT_FOUND
         is SeasonNotFound -> NOT_FOUND
         is PlayerNotInSeason -> NOT_FOUND
+        is InvalidLoginCredentials -> FORBIDDEN
+        is JwtSerializationException -> INTERNAL_SERVER_ERROR
     }.value()
     Error(status, message)
 }

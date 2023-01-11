@@ -21,8 +21,11 @@ repositories {
 dependencies {
 	/* Spring stuff */
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
+	/* Jwt stuff */
+	implementation("org.bitbucket.b_c:jose4j:0.9.1")
 	/* Kotlin stuff */
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib")

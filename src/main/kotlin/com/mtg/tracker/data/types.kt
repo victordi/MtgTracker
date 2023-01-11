@@ -1,5 +1,20 @@
 package com.mtg.tracker.data
 
+import java.time.Instant
+
+data class User(val username: String, val password: String)
+
+data class SignedJWT(
+    val iss: String,
+    val jti: String,
+    val iat: String,
+    val exp: Int,
+    val sub: String
+)
+
+val SignedJWT.isNotExpired: Boolean
+    get() = exp > Instant.now().epochSecond
+
 enum class Tier(val multiplier: Double) {
     I(1.0), II(1.5), III(2.0)
 }

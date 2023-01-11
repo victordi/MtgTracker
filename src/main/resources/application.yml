@@ -1,4 +1,8 @@
-spring.liquibase.enabled: true
+spring:
+  main:
+    web-application-type: reactive
+  liquibase:
+    enabled: true
 mtg:
   db:
     url: "jdbc:pgsql://localhost:5432/postgres"
