@@ -3,6 +3,7 @@ package com.mtg.tracker.controller
 import com.mtg.tracker.data.NewSeasonRequest
 import com.mtg.tracker.data.query.SeasonQuery
 import org.slf4j.LoggerFactory
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -27,6 +28,13 @@ class SeasonController {
         logger.info("Retrieve Season($id)")
         SeasonQuery.find(id).toHttpResponse()
     }
+
+    @DeleteMapping("/{id}")
+    suspend fun deleteById(@PathVariable("id") id: Int) = run {
+        logger.info("Retrieve Season($id)")
+        SeasonQuery.delete(id).toHttpResponse()
+    }
+
 
     @PostMapping
     suspend fun startSeason(@RequestBody seasonRequest: NewSeasonRequest) = run {

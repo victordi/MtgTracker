@@ -36,7 +36,13 @@ data class GameResult(
     val penalty: Int
 ) {
     fun points(pointSystem: PointSystem, deckTier: Tier): Int {
-        val place = (pointSystem.placeScore[place - 1] * deckTier.multiplier).toInt()
+        val placeScore = when(place) {
+            1 -> pointSystem.firstPlace
+            2 -> pointSystem.secondPlace
+            3 -> pointSystem.thirdPlace
+            else -> pointSystem.fourthPlace
+        }
+        val place = (placeScore * deckTier.multiplier).toInt()
         val infinitePenalty = if (infinite) pointSystem.infinite else 0
         return place + kills * pointSystem.kill + commanderKills * pointSystem.commanderKill +
                 bodyGuard * pointSystem.bodyGuard - infinitePenalty - penalty
@@ -46,10 +52,11 @@ data class GameResult(
 data class Season(val id: Int, val players: List<Pair<String, Int>>)
 
 data class PointSystem(
-    val placeScore: List<Int>, val kill: Int, val commanderKill: Int, val infinite: Int, val bodyGuard: Int
+    val firstPlace: Int, val secondPlace: Int, val thirdPlace: Int, val fourthPlace: Int,
+    val kill: Int, val commanderKill: Int, val infinite: Int, val bodyGuard: Int
 )
 
-val DEFAULT_POINT_SYSTEM = PointSystem(listOf(4, 2, 1, 0), 2, 1, 2, 1)
+val DEFAULT_POINT_SYSTEM = PointSystem(4, 2, 1, 0, 2, 1, 2, 1)
 
 data class NewSeasonRequest(
     val player1: String, val player2: String, val player3: String, val player4: String,

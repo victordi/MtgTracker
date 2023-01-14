@@ -17,13 +17,12 @@ object PointsSystemQuery {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     suspend fun registerSystem(seasonId: Int, pointSystem: PointSystem): Either<Failure, Int> = safeTransaction {
-        require(pointSystem.placeScore.size == 4) { "placeScore should be of size 4" }
         PointsSystems.insertAndGetId {
             it[PointsSystems.seasonId] = seasonId
-            it[firstPlace] = pointSystem.placeScore[0]
-            it[secondPlace] = pointSystem.placeScore[1]
-            it[thirdPlace] = pointSystem.placeScore[2]
-            it[fourthPlace] = pointSystem.placeScore[3]
+            it[firstPlace] = pointSystem.firstPlace
+            it[secondPlace] = pointSystem.secondPlace
+            it[thirdPlace] = pointSystem.thirdPlace
+            it[fourthPlace] = pointSystem.fourthPlace
             it[kill] = pointSystem.kill
             it[commanderKill] = pointSystem.commanderKill
             it[infinite] = pointSystem.infinite
@@ -37,12 +36,10 @@ object PointsSystemQuery {
         PointsSystems.select(PointsSystems.seasonId eq seasonId)
             .map {
                 PointSystem(
-                    listOf(
-                        it[PointsSystems.firstPlace],
-                        it[PointsSystems.secondPlace],
-                        it[PointsSystems.thirdPlace],
-                        it[PointsSystems.fourthPlace]
-                    ),
+                    it[PointsSystems.firstPlace],
+                    it[PointsSystems.secondPlace],
+                    it[PointsSystems.thirdPlace],
+                    it[PointsSystems.fourthPlace],
                     it[PointsSystems.kill],
                     it[PointsSystems.commanderKill],
                     it[PointsSystems.infinite],

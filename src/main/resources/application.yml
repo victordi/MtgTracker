@@ -9,3 +9,5 @@ mtg:
     user: "postgres"
     password: "password"
     changeLog: "classpath:db.changelog-master.yml"
+server:
+  port: 8086
