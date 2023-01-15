@@ -2,18 +2,18 @@ package com.mtg.tracker.data.query
 
 import arrow.core.Either
 import arrow.core.continuations.either
-import arrow.core.flatMap
 import arrow.core.leftIfNull
 import com.mtg.tracker.controller.NewGameResultReq
 import com.mtg.tracker.data.GameResult
 import com.mtg.tracker.data.GameResults
+import com.mtg.tracker.data.PointSystem
+import com.mtg.tracker.data.Tier
 import com.mtg.tracker.data.safeTransaction
 import com.mtg.tracker.failure.DatabaseFailure
 import com.mtg.tracker.failure.DeckNotFound
 import com.mtg.tracker.failure.Failure
 import com.mtg.tracker.failure.GameNotInSeason
 import com.mtg.tracker.failure.PlayerNotInSeason
-import com.mtg.tracker.failure.SeasonNotFound
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertAndGetId
@@ -63,30 +63,49 @@ object GameResultQuery {
         .mapLeft { DatabaseFailure }
 
     suspend fun reportGame(seasonId: Int, game: NewGameResultReq): Either<Failure, Int> = either {
-        val season = SeasonQuery.find(seasonId).bind()
-        val prevPoints = Either.Right(season.players.find { it.first == game.playerName })
-            .leftIfNull { PlayerNotInSeason.also { logger.error(it.message) } }
-            .bind()
-            .second
-        val player = PlayerQuery.findByName(game.playerName).bind()
-        val deck = Either.Right(player.decks.find { it.name == game.deckName })
-            .leftIfNull { DeckNotFound.also { logger.error(it.message) } }
-            .bind()
-        val pointSystem = PointsSystemQuery.find(seasonId).bind()
-        val pointsMade = game.points(pointSystem, deck.tier)
-        SeasonQuery.updatePoints(season, game.playerName, prevPoints + pointsMade).bind()
+        var pointsMade = 0
+        updatePoints(seasonId, game.playerName, game.deckName) { prevPoints, pointSystem, tier ->
+            pointsMade = game.points(pointSystem, tier)
+            prevPoints + pointsMade
+        }
         insert(seasonId, game, pointsMade).bind()
     }
 
-    suspend fun deleteGame(seasonId: Int, id: Int): Either<Failure, Int> =
+    private suspend fun getGameResult(seasonId: Int, id: Int): Either<Failure, GameResult> =
         findAll(seasonId)
             .map { it.find { game -> game.id == id } }
             .leftIfNull { GameNotInSeason }
-            .flatMap {
-                safeTransaction {
-                    GameResults.deleteWhere { GameResults.id eq id }
-                }
-                    .tapLeft { logger.error(it.message) }
-                    .mapLeft { DatabaseFailure }
-            }
+
+    suspend fun removeGame(seasonId: Int, id: Int): Either<Failure, Int> = either {
+        val result = getGameResult(seasonId, id).bind()
+        updatePoints(seasonId, result.playerName, result.deckName) { prevPoints, pointSystem, tier ->
+            prevPoints - result.points(pointSystem, tier)
+        }
+        deleteGame(id).bind()
+    }
+
+    private suspend fun deleteGame(id: Int): Either<Failure, Int> = safeTransaction {
+        GameResults.deleteWhere { GameResults.id eq id }
+    }
+        .tapLeft { logger.error(it.message) }
+        .mapLeft { DatabaseFailure }
+
+    private suspend fun updatePoints(
+        seasonId: Int,
+        playerName: String,
+        deckName: String,
+        f: (Int, PointSystem, Tier) -> Int
+    ): Either<Failure, Unit> = either {
+        val season = SeasonQuery.find(seasonId).bind()
+        val prevPoints = Either.Right(season.players.find { it.first == playerName })
+            .leftIfNull { PlayerNotInSeason.also { logger.error(it.message) } }
+            .bind()
+            .second
+        val player = PlayerQuery.findByName(playerName).bind()
+        val deck = Either.Right(player.decks.find { it.name == deckName })
+            .leftIfNull { DeckNotFound.also { logger.error(it.message) } }
+            .bind()
+        val pointSystem = PointsSystemQuery.find(seasonId).bind()
+        SeasonQuery.updatePoints(season, playerName, f(prevPoints, pointSystem, deck.tier)).bind()
+    }
 }

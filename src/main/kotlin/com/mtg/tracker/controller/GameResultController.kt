@@ -31,6 +31,6 @@ class GameResultController {
     @DeleteMapping("/{gameId}")
     suspend fun delete(@PathVariable("id") id: Int, @PathVariable("gameId") gameId: Int) = run {
         logger.info("Deleting Game result with id $gameId from Seasons $id")
-        GameResultQuery.deleteGame(id, gameId).toHttpResponse()
+        GameResultQuery.removeGame(id, gameId).toHttpResponse()
     }
 }
