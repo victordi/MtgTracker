@@ -5,6 +5,7 @@ import arrow.core.Validated
 import com.mtg.tracker.failure.DatabaseFailure
 import com.mtg.tracker.failure.DeckNotFound
 import com.mtg.tracker.failure.Failure
+import com.mtg.tracker.failure.GameNotInSeason
 import com.mtg.tracker.failure.InvalidLoginCredentials
 import com.mtg.tracker.failure.JwtSerializationException
 import com.mtg.tracker.failure.NameNotUniqueFailure
@@ -42,6 +43,7 @@ fun Failure.toError(): Error = run {
         is DeckNotFound -> NOT_FOUND
         is SeasonNotFound -> NOT_FOUND
         is PlayerNotInSeason -> NOT_FOUND
+        is GameNotInSeason -> NOT_FOUND
         is InvalidLoginCredentials -> FORBIDDEN
         is JwtSerializationException -> INTERNAL_SERVER_ERROR
     }.value()

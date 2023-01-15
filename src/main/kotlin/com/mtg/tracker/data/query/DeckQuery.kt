@@ -19,7 +19,7 @@ object DeckQuery {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     private suspend fun failIfExists(name: String): Either<Failure, Unit> = safeTransaction {
-        if (Decks.selectAll().map { it[Decks.name] }.contains(name)) null else Unit
+        if (Decks.selectAll().map { it[Decks.name] }.contains(name) || name.isEmpty()) null else Unit
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }

@@ -98,6 +98,6 @@ object PlayerQuery {
             deckStats.map { it.stats }.calculateAverage()
         }
 
-        PlayerStats(name, avgDeckStats, avgStats, deckStatsPerSeason, statsPerSeason)
+        PlayerStats(name, avgDeckStats, avgStats, deckStatsPerSeason.toList(), statsPerSeason.toList())
     }
 }

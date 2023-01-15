@@ -34,10 +34,10 @@ class PlayerController {
         PlayerQuery.insert(body.name).toHttpResponse()
     }
 
-    @DeleteMapping
-    suspend fun removePlayer(@RequestBody body: NameReq) = run {
-        logger.info("Delete player: ${body.name}")
-        PlayerQuery.delete(body.name).toHttpResponse()
+    @DeleteMapping("/{name}")
+    suspend fun removePlayer(@PathVariable("name") name: String) = run {
+        logger.info("Delete player: $name")
+        PlayerQuery.delete(name).toHttpResponse()
     }
 
     @GetMapping("/{name}/stats")

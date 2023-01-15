@@ -37,9 +37,9 @@ class DeckController {
         DeckQuery.updateTier(name, deck).toHttpResponse()
     }
 
-    @DeleteMapping
-    suspend fun removeDeck(@PathVariable("name") name: String, @RequestBody body: NameReq) = run {
-        logger.info("Deleting deck: ${body.name} of Player($name)")
-        DeckQuery.delete(name, body.name).toHttpResponse()
+    @DeleteMapping("/{deckName}")
+    suspend fun removeDeck(@PathVariable("name") name: String, @PathVariable deckName: String) = run {
+        logger.info("Deleting deck: $deckName of Player($name)")
+        DeckQuery.delete(name, deckName).toHttpResponse()
     }
 }
