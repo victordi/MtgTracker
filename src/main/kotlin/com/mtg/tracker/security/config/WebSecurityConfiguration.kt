@@ -20,7 +20,7 @@ class WebSecurityConfiguration(
 ) {
 
   private val corsConfig = CorsConfiguration().apply {
-    allowedOrigins = listOf("http://localhost:3000")
+    allowedOrigins = listOf("http://localhost:3000", "http://mtg-tracker.duckdns.org:3000/")
     maxAge = 8000L
     allowedMethods = listOf("*")
     allowedHeaders = listOf("*")
