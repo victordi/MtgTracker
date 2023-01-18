@@ -1,8 +1,10 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
 	id("org.springframework.boot") version "3.0.1"
 	id("io.spring.dependency-management") version "1.1.0"
+	id("com.github.johnrengelman.shadow") version "7.1.2"
 	kotlin("jvm") version "1.7.22"
 	kotlin("plugin.spring") version "1.7.22"
 }
@@ -54,15 +56,8 @@ tasks.withType<Test> {
 	useJUnitPlatform()
 }
 
-val fatJar = task("fatJar", type = Jar::class) {
+tasks.withType<ShadowJar> {
 	manifest {
 		attributes["Main-Class"] = "com.mtg.tracker.MtgTrackerApplicationKt"
-	}
-	with(tasks["jar"] as CopySpec)
-}
-
-tasks {
-	"build" {
-		dependsOn(fatJar)
 	}
 }
