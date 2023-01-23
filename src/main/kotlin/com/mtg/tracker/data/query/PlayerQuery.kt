@@ -8,21 +8,21 @@ import arrow.core.leftIfNull
 import com.mtg.tracker.data.Deck
 import com.mtg.tracker.data.DeckStats
 import com.mtg.tracker.data.Decks
-import com.mtg.tracker.data.GameResult
-import com.mtg.tracker.data.GameResults
 import com.mtg.tracker.data.Player
 import com.mtg.tracker.data.PlayerStats
 import com.mtg.tracker.data.Players
-import com.mtg.tracker.data.Seasons
-import com.mtg.tracker.data.Stats
 import com.mtg.tracker.data.calculateAverage
 import com.mtg.tracker.data.safeTransaction
 import com.mtg.tracker.failure.DatabaseFailure
 import com.mtg.tracker.failure.Failure
 import com.mtg.tracker.failure.NameNotUniqueFailure
 import com.mtg.tracker.failure.PlayerNotFound
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.slf4j.LoggerFactory
 
 object PlayerQuery {
@@ -98,39 +98,6 @@ object PlayerQuery {
             deckStats.map { it.stats }.calculateAverage()
         }
 
-        PlayerStats(name, avgDeckStats, avgStats, deckStatsPerSeason, statsPerSeason)
+        PlayerStats(name, avgDeckStats, avgStats, deckStatsPerSeason.toList(), statsPerSeason.toList())
     }
-
-    private suspend fun gameResultsPerSeason(seasonId: Int, playerName: String) = safeTransaction {
-        GameResults
-            .select { GameResults.seasonId eq seasonId and (GameResults.playerName eq playerName) }
-            .groupBy { it[GameResults.deckName] }
-            .mapValues { (deckName, resultRows) ->
-                val gameResults = resultRows.map {
-                    GameResult(
-                        it[GameResults.seasonId], it[GameResults.playerName], it[GameResults.deckName],
-                        it[GameResults.place], it[GameResults.startOrder], it[GameResults.kills],
-                        it[GameResults.commanderKills], it[GameResults.infinite], it[GameResults.bodyGuard],
-                        it[GameResults.penalty]
-                    )
-                }
-                val stats = Stats(
-                    gameResults.size,
-                    gameResults.filter { it.place == 1 }.size,
-                    gameResults.filter { it.place == 1 && it.startOrder == 1 }.size,
-                    gameResults.filter { it.place == 1 && it.startOrder == 2 }.size,
-                    gameResults.filter { it.place == 1 && it.startOrder == 3 }.size,
-                    gameResults.filter { it.place == 1 && it.startOrder == 4 }.size,
-                    gameResults.filter { it.place == 1 && it.infinite }.size,
-                    gameResults.sumOf { it.place }.toDouble() / gameResults.size.toDouble(),
-                    gameResults.sumOf { it.kills }.toDouble() / gameResults.size.toDouble(),
-                    gameResults.sumOf { it.commanderKills }.toDouble() / gameResults.size.toDouble(),
-                )
-                DeckStats(deckName, stats)
-            }
-            .values
-            .toList()
-    }
-        .tapLeft { logger.error(it.message) }
-        .mapLeft { DatabaseFailure }
 }

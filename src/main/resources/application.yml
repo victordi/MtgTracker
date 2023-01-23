@@ -1,7 +1,13 @@
-spring.liquibase.enabled: true
+spring:
+  main:
+    web-application-type: reactive
+  liquibase:
+    enabled: true
 mtg:
   db:
     url: "jdbc:pgsql://localhost:5432/postgres"
     user: "postgres"
     password: "password"
     changeLog: "classpath:db.changelog-master.yml"
+server:
+  port: 8085

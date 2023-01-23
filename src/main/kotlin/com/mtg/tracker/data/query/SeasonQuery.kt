@@ -1,18 +1,21 @@
 package com.mtg.tracker.data.query
 
 import arrow.core.Either
-import arrow.core.computations.ResultEffect.bind
 import arrow.core.continuations.either
-import arrow.core.flatMap
 import arrow.core.leftIfNull
 import com.mtg.tracker.data.NewSeasonRequest
+import com.mtg.tracker.data.PointsSystems
 import com.mtg.tracker.data.Season
+import com.mtg.tracker.data.SeasonStats
 import com.mtg.tracker.data.Seasons
+import com.mtg.tracker.data.calculateAverage
 import com.mtg.tracker.data.safeTransaction
 import com.mtg.tracker.failure.DatabaseFailure
 import com.mtg.tracker.failure.Failure
+import com.mtg.tracker.failure.PlayerNotFound
 import com.mtg.tracker.failure.SeasonNotFound
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
@@ -38,6 +41,13 @@ object SeasonQuery {
         .mapLeft { DatabaseFailure }
 
     suspend fun startSeason(season: NewSeasonRequest): Either<Failure, Int> = either {
+        ensure(season.player1 != season.player2
+                && season.player1 != season.player3
+                && season.player1 != season.player4
+                && season.player2 != season.player3
+        ) {
+            PlayerNotFound
+        }
         val seasonId = insert(season.player1, season.player2, season.player3, season.player4).bind()
         PointsSystemQuery.registerSystem(seasonId, season.pointSystem).bind()
         seasonId
@@ -60,6 +70,13 @@ object SeasonQuery {
         .mapLeft { DatabaseFailure }
         .leftIfNull { SeasonNotFound.also { logger.error(it.message) } }
 
+    suspend fun delete(id: Int): Either<Failure, Int> = safeTransaction {
+        PointsSystems.deleteWhere { seasonId eq id }
+        Seasons.deleteWhere { Seasons.id eq id }
+    }
+        .tapLeft { logger.error(it.message) }
+        .mapLeft { DatabaseFailure }
+
     suspend fun find(): Either<Failure, List<Season>> = safeTransaction {
         Seasons.selectAll()
             .map {
@@ -71,6 +88,7 @@ object SeasonQuery {
                 )
                 Season(it[Seasons.id].value, players)
             }
+            .sortedBy { it.id }
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
@@ -89,4 +107,13 @@ object SeasonQuery {
     }
         .tapLeft { logger.error(it.message) }
         .mapLeft { DatabaseFailure }
+
+    suspend fun stats(seasonId: Int): Either<Failure, List<Pair<String, SeasonStats>>> = either {
+        val season = find(seasonId).bind()
+        season.players.map { it.first }.associateWith {
+            val deckStats = gameResultsPerSeason(seasonId, it).bind()
+            val playerStats = deckStats.map { deck -> deck.stats }.calculateAverage()
+            SeasonStats(playerStats, deckStats)
+        }.toList()
+    }
 }

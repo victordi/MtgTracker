@@ -1,5 +1,20 @@
 package com.mtg.tracker.data
 
+import java.time.Instant
+
+data class User(val username: String, val password: String)
+
+data class SignedJWT(
+    val iss: String,
+    val jti: String,
+    val iat: String,
+    val exp: Int,
+    val sub: String
+)
+
+val SignedJWT.isNotExpired: Boolean
+    get() = exp > Instant.now().epochSecond
+
 enum class Tier(val multiplier: Double) {
     I(1.0), II(1.5), III(2.0)
 }
@@ -9,7 +24,7 @@ data class Player(val name: String, val decks: List<Deck>)
 data class Deck(val name: String, val tier: Tier)
 
 data class GameResult(
-    val seasonId: Int,
+    val id: Int,
     val playerName: String,
     val deckName: String,
     val place: Int,
@@ -21,7 +36,13 @@ data class GameResult(
     val penalty: Int
 ) {
     fun points(pointSystem: PointSystem, deckTier: Tier): Int {
-        val place = (pointSystem.placeScore[place - 1] * deckTier.multiplier).toInt()
+        val placeScore = when(place) {
+            1 -> pointSystem.firstPlace
+            2 -> pointSystem.secondPlace
+            3 -> pointSystem.thirdPlace
+            else -> pointSystem.fourthPlace
+        }
+        val place = (placeScore * deckTier.multiplier).toInt()
         val infinitePenalty = if (infinite) pointSystem.infinite else 0
         return place + kills * pointSystem.kill + commanderKills * pointSystem.commanderKill +
                 bodyGuard * pointSystem.bodyGuard - infinitePenalty - penalty
@@ -31,13 +52,15 @@ data class GameResult(
 data class Season(val id: Int, val players: List<Pair<String, Int>>)
 
 data class PointSystem(
-    val placeScore: List<Int>, val kill: Int, val commanderKill: Int, val infinite: Int, val bodyGuard: Int
+    val firstPlace: Int, val secondPlace: Int, val thirdPlace: Int, val fourthPlace: Int,
+    val kill: Int, val commanderKill: Int, val infinite: Int, val bodyGuard: Int
 )
 
-val DEFAULT_POINT_SYSTEM = PointSystem(listOf(4, 2, 1, 0), 2, 1, 2, 1)
+val DEFAULT_POINT_SYSTEM = PointSystem(4, 2, 1, 0, 2, 1, 2, 1)
 
 data class NewSeasonRequest(
-    val player1: String, val player2: String, val player3: String, val player4: String, val pointSystem: PointSystem
+    val player1: String, val player2: String, val player3: String, val player4: String,
+    val pointSystem: PointSystem = DEFAULT_POINT_SYSTEM
 )
 
 data class Stats(
@@ -62,8 +85,13 @@ data class PlayerStats(
     val playerName: String,
     val avgDeckStats: List<DeckStats>,
     val avgStats: Stats,
-    val deckStatsPerSeason: Map<Int, List<DeckStats>>,
-    val statsPerSeason: Map<Int, Stats>
+    val deckStatsPerSeason: List<Pair<Int, List<DeckStats>>>,
+    val statsPerSeason: List<Pair<Int, Stats>>
+)
+
+data class SeasonStats(
+    val avgStats: Stats,
+    val deckStats: List<DeckStats>
 )
 
 fun List<Stats>.calculateAverage(): Stats = Stats(

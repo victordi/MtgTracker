@@ -1,0 +1,9 @@
+--liquibase formatted sql
+--changeset mtg:2
+
+CREATE TABLE MTG_USER (
+    USERNAME VARCHAR(255) PRIMARY KEY,
+    PASSWORD VARCHAR(255) NOT NULL
+);
+
+INSERT INTO MTG_USER VALUES ('victor', '$2a$10$/H9gXLLSPiXaq8f.c40HeullPxt3o0iKbRv4kHzdAAY49sf6.FTPu');
